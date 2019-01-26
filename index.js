@@ -10,4 +10,5 @@ server.get('/', (req, res) => {
 
 server.listen(port, () => {
   console.log(`\n=== Server listening on port ${port}\n`);
+  console.log(process.env.JWT_SECRET);
 });

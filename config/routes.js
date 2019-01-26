@@ -11,6 +11,7 @@ const { authenticate } = require('../auth/authenticate');
 // secret in .env file
 // const jwtKey =
 //   process.env.JWT_SECRET ||
+
 const secret = 'secret';
 
 // generate token
@@ -44,10 +45,10 @@ function register(req, res) {
     creds.password = bcrypt.hashSync(creds.password, 12);
 
     // Insert into db:
-    db(`users`).insert(newUser)
+    db(`users`).insert(creds)
       .then( (newID) => {
-        const token = generateToken(newID[0])
-        res.status(201).json({ id: newID[0], token });
+        // const token = generateToken(newID)
+        res.status(201).json({ id: newID[0] });
       })
       .catch( (err) =>{
         res.status(500).json({ error: `Could not register new user: ${err}` });
@@ -58,7 +59,6 @@ function register(req, res) {
     res.status(400).json({ error: "Please enter a username and a password." });
   }
 }
-
 
 function login(req, res) {
   // implement user login
