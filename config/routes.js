@@ -9,9 +9,9 @@ const jwt = require('jsonwebtoken');
 const { authenticate } = require('../auth/authenticate');
 
 // secret in .env file
-const jwtKey =
-  process.env.JWT_SECRET ||
-// const secret = 'secret';
+// const jwtKey =
+//   process.env.JWT_SECRET ||
+const secret = 'secret';
 
 // generate token
 function generateToken(user) {
@@ -24,7 +24,7 @@ function generateToken(user) {
     jwtid: '12345' // jti --> like Luis used in auth-ii lecture
   }
   //return token
-  return jwt.sign(payload, jwtKey, options);
+  return jwt.sign(payload, secret, options);
 };
 
 module.exports = server => {
@@ -33,77 +33,21 @@ module.exports = server => {
   server.get('/api/jokes', authenticate, getJokes);
 };
 
-// // this returns empty array, but creates user
-// function register(req, res){
-//   const creds = req.body;
-
-//   const hash = bcrypt.hashSync(creds.password, 10);
-//   creds.password = hash;
-
-//   db('users')
-//     .insert(creds)
-//     .then(ids => {
-//       const id = ids[0];
-
-//       // find the user using the id
-//       db('users')
-//         .where({ id })
-//         .first()
-//         .then(user => {
-//           // generate a token
-//           const token = generateToken(user);
-//           // attach that token to the response
-//           res.status(201).json({ id: ids[0], token });
-//         })
-//         .catch(err => {
-//           res.status(500).send(err);
-//         })
-//     })
-//     .catch(err => res.status(500).send(err));
-// };
-
-// // This loads forever, but creates user
-// function register(req, res) {
-//   // implement user registration
-
-//   const creds = req.body;
-
-//   if (creds.username && creds.password) {
-//     const hash = bcrypt.hashSync(creds.username, 10);
-//     creds.password = hash;
-
-//     db('users')
-//     .insert(creds)
-//     .then(ids => {
-//       const id = ids[0];
-//       db('users')
-//         .where('id', id)
-//         .then(user => {
-//           const token = generateToken(user);
-//           res.status(201).json({ id: ids[0], token })
-//         })
-//     })
-//     .catch(err => {
-//       res.status(500).send(err);
-//     })
-//   } else {
-//     res.status(400).json({ message: "Provide username and password." });
-//   }
-// }
-
+// This returns the id, but not the token, and creates user.
 function register(req, res) {
   // implement user registration
-  const newUser = req.body;
+  const creds = req.body;
 
   // Only add if username & password are not empty
-  if( newUser.username && newUser.password ){
+  if (creds.username && creds.password) {
     // hash the password:
-    newUser.password = bcrypt.hashSync(newUser.password, 12);
+    creds.password = bcrypt.hashSync(creds.password, 12);
 
     // Insert into db:
     db(`users`).insert(newUser)
-      .then( (newId) => {
-        res.status(201).json({ id: newId[0] });
+      .then( (newID) => {
+        const token = generateToken(newID[0])
+        res.status(201).json({ id: newID[0], token });
       })
       .catch( (err) =>{
         res.status(500).json({ error: `Could not register new user: ${err}` });
@@ -118,6 +62,25 @@ function register(req, res) {
 
 function login(req, res) {
   // implement user login
+  const creds = req.body;
+
+  if (creds.username && creds.password) {
+    db('users')
+      .where('username', creds.username)
+      .then(user => {
+        if (user.length && bcrypt.compareSync(creds.password, user[0].password)) {
+          const token = generateToken(user[0]);
+          res.status(201).json({ message: 'User logged in', token });
+        } else {
+          res.status(401).json({ message: "Invaled credentials" });
+        }
+      })
+      .catch(err => {
+        res.status(500).send(err);
+      })
+  } else {
+    res.status(400).json({ message: "Provide both username and passowrd." })
+  }
 }
 
 function getJokes(req, res) {
