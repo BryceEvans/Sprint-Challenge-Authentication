@@ -9,9 +9,9 @@ const jwt = require('jsonwebtoken');
 const { authenticate } = require('../auth/authenticate');
 
 // secret in .env file
-const secret = 
+const jwtKey =
   process.env.JWT_SECRET ||
-
+// const secret = 'secret';
 
 // generate token
 function generateToken(user) {
@@ -24,8 +24,7 @@ function generateToken(user) {
     jwtid: '12345' // jti --> like Luis used in auth-ii lecture
   }
   //return token
-  return jwt.sign(payload, secret, options);
-  
+  return jwt.sign(payload, jwtKey, options);
 };
 
 module.exports = server => {
@@ -34,33 +33,63 @@ module.exports = server => {
   server.get('/api/jokes', authenticate, getJokes);
 };
 
-function register(req, res) {
-  // implement user registration
+// // this returns empty array, but creates user
+// function register(req, res){
+//   const creds = req.body;
 
-  const creds = req.body;
+//   const hash = bcrypt.hashSync(creds.password, 10);
+//   creds.password = hash;
 
-  if (creds.username && creds.password) {
-    const hash = bcrypt.hashSync(creds.username, 10);
-    creds.password = hash;
+//   db('users')
+//     .insert(creds)
+//     .then(ids => {
+//       const id = ids[0];
 
-    db('users')
-    .insert(creds)
-    .then(ids => {
-      const id = ids[0];
-      db('users')
-        .where('id', id)
-        .then(user => {
-          const token = generateToken(user);
-          res.status(201).json({ id: ids[0], token })
-        })
-    })
-    .catch(err => {
-      res.status(500).send(err);
-    })
-  } else {
-    res.status(400).json({ message: "Provide username and password." });
-  }
-}
+//       // find the user using the id
+//       db('users')
+//         .where({ id })
+//         .first()
+//         .then(user => {
+//           // generate a token
+//           const token = generateToken(user);
+//           // attach that token to the response
+//           res.status(201).json({ id: ids[0], token });
+//         })
+//         .catch(err => {
+//           res.status(500).send(err);
+//         })
+//     })
+//     .catch(err => res.status(500).send(err));
+// };
+
+// // This loads forever, but creates user
+// function register(req, res) {
+//   // implement user registration
+
+//   const creds = req.body;
+
+//   if (creds.username && creds.password) {
+//     const hash = bcrypt.hashSync(creds.username, 10);
+//     creds.password = hash;
+
+//     db('users')
+//     .insert(creds)
+//     .then(ids => {
+//       const id = ids[0];
+//       db('users')
+//         .where('id', id)
+//         .then(user => {
+//           const token = generateToken(user);
+//           res.status(201).json({ id: ids[0], token })
+//         })
+//     })
+//     .catch(err => {
+//       res.status(500).send(err);
+//     })
+//   } else {
+//     res.status(400).json({ message: "Provide username and password." });
+//   }
+// }
 
 function register(req, res) {
   // implement user registration
