@@ -9,10 +9,10 @@ const jwt = require('jsonwebtoken');
 const { authenticate } = require('../auth/authenticate');
 
 // secret in .env file
-// const jwtKey =
-//   process.env.JWT_SECRET ||
+const jwtKey =
+  process.env.JWT_SECRET
 
-const secret = 'secret';
+// const secret = 'secret';
 
 // generate token
 function generateToken(user) {
@@ -25,7 +25,7 @@ function generateToken(user) {
     jwtid: '12345' // jti --> like Luis used in auth-ii lecture
   }
   //return token
-  return jwt.sign(payload, secret, options);
+  return jwt.sign(payload, jwtKey, options);
 };
 
 module.exports = server => {
