@@ -36,27 +36,56 @@ module.exports = server => {
 
 function register(req, res) {
   // implement user registration
-  const creds = req.body;
-  const hash = bcrypt.hashSync(creds.username, 10);
-  creds.password = hash;
 
-  db('users')
+  const creds = req.body;
+
+  if (creds.username && creds.password) {
+    const hash = bcrypt.hashSync(creds.username, 10);
+    creds.password = hash;
+
+    db('users')
     .insert(creds)
     .then(ids => {
       const id = ids[0];
-
       db('users')
-        .where({ id })
-        .first()
+        .where('id', id)
         .then(user => {
           const token = generateToken(user);
-          res.status(201).json({ id: user.id, token})
-        })
-        .catch(err => {
-          res.status(500).send(err);
+          res.status(201).json({ id: ids[0], token })
         })
     })
+    .catch(err => {
+      res.status(500).send(err);
+    })
+  } else {
+    res.status(400).json({ message: "Provide username and password." });
+  }
 }
+
+function register(req, res) {
+  // implement user registration
+  const newUser = req.body;
+
+  // Only add if username & password are not empty
+  if( newUser.username && newUser.password ){
+    // hash the password:
+    newUser.password = bcrypt.hashSync(newUser.password, 12);
+
+    // Insert into db:
+    db(`users`).insert(newUser)
+      .then( (newId) => {
+        res.status(201).json({ id: newId[0] });
+      })
+      .catch( (err) =>{
+        res.status(500).json({ error: `Could not register new user: ${err}` });
+      });
+    // end-db.insert
+  } else {
+    // Missing username or password
+    res.status(400).json({ error: "Please enter a username and a password." });
+  }
+}
+
 
 function login(req, res) {
   // implement user login
